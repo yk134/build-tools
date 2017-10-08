@@ -1,14 +1,16 @@
 #!/bin/bash
-
-set -e
-
-sudo apt-get update && apt-get upgrade -y && apt-get install postgresql postgresql-server-dev-9.5 build-essential python3-pillow python3-lxml python-ldap3 python3-dev python3-pip python3-setuptools npm nodejs git gdebi libldap2-dev libsasl2-dev  libxml2-dev libxslt1-dev libjpeg-dev -y
-sudo npm install -g less less-plugin-clean-css -y && sudo ln -s /usr/bin/nodejs /usr/bin/node
-cd /tmp && wget https://downloads.wkhtmltopdf.org/0.12/0.12.2.1/wkhtmltox-0.12.2.1_linux-trusty-amd64.deb && sudo gdebi -n wkhtmltox-0.12.2.1_linux-trusty-amd64.deb && rm wkhtmltox-0.12.2.1_linux-trusty-amd64.deb
-sudo ln -s /usr/local/bin/wkhtmltopdf /usr/bin/ && sudo ln -s /usr/local/bin/wkhtmltoimage /usr/bin/
+apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
+echo "deb http://apt.postgresql.org/pub/repos/apt/ precise-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+sudo apt-get update && apt-get install -y --no-install-recommends ca-certificates wget curl node-less postgresql postgresql-server-dev-9.5 build-essential python3-pillow python3-lxml python-ldap3 python3-dev python3-pip python3-setuptools npm nodejs git gdebi libldap2-dev libsasl2-dev  libxml2-dev libxslt1-dev libjpeg-dev zlib1g-dev npm libfontconfig1
+npm install -g less less-plugin-clean-css -y && ln -s /usr/bin/nodejs /usr/bin/node
+npm install -g phantomjs
+npm install -g phantomjs-prebuilt
+curl -o wkhtmltox.deb -SL http://nightly.odoo.com/extra/wkhtmltox-0.12.1.2_linux-jessie-amd64.deb
+echo '40e8b906de658a2221b15e4e8cd82565a47d7ee8 wkhtmltox.deb' | sha1sum -c -
+dpkg --force-depends -i wkhtmltox.deb
+sudo apt-get -y install -f --no-install-recommends
 wget -N http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz && sudo gunzip GeoLiteCity.dat.gz && sudo mkdir /usr/share/GeoIP/ && sudo mv GeoLiteCity.dat /usr/share/GeoIP/
 sudo su - postgres -c "createuser -s flectra"
-
 echo `pwd`
 ls -alh .
 env
