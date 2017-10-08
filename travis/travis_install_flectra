@@ -6,6 +6,7 @@ sudo dpkg --force-depends -i wkhtmltox.deb
 sudo apt-get -y install -f --no-install-recommends
 wget -N http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz && sudo gunzip GeoLiteCity.dat.gz && sudo mkdir /usr/share/GeoIP/ && sudo mv GeoLiteCity.dat /usr/share/GeoIP/
 sudo su - postgres -c "createuser -s flectra"
+sudo su - travis -c "./flectra-bin --addons-path=addons -s --stop-after-init -d test"
 echo `pwd`
 ls -alh .
 env
