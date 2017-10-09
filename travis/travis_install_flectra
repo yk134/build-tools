@@ -6,8 +6,8 @@ sudo dpkg --force-depends -i wkhtmltox.deb
 sudo apt-get -y install -f --no-install-recommends
 wget -N http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz && sudo gunzip GeoLiteCity.dat.gz && sudo mkdir /usr/share/GeoIP/ && sudo mv GeoLiteCity.dat /usr/share/GeoIP/
 sudo su - postgres -c "createuser -s flectra"
-sudo su - travis -c "source ~/virtualenv/python3.6.3/bin/activate"
-sudo su - travis -c "/home/travis/build/flectrahq/flectra/flectra-bin --addons-path=/home/travis/build/flectrahq/flectra/addons -s --stop-after-init -d test"
+echo "STARTING FLECTRA SERVER ---->"
+sudo su - travis -c "source ~/virtualenv/python3.6.3/bin/activate && pip install -r ~/requirements.txt && ~/flectrahq/flectra/flectra-bin --addons-path=/home/travis/build/flectrahq/flectra/addons -s --stop-after-init -d test"
 echo `pwd`
 ls -alh .
 env
