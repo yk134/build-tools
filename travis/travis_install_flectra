@@ -1,5 +1,4 @@
 #!/bin/bash
-echo `python -V`
 sudo npm install -g less less-plugin-clean-css -y && ln -s /usr/bin/nodejs /usr/bin/node
 curl -o wkhtmltox.deb -SL http://nightly.odoo.com/extra/wkhtmltox-0.12.1.2_linux-jessie-amd64.deb
 echo '40e8b906de658a2221b15e4e8cd82565a47d7ee8 wkhtmltox.deb' | sha1sum -c -
@@ -7,6 +6,7 @@ sudo dpkg --force-depends -i wkhtmltox.deb
 sudo apt-get -y install -f --no-install-recommends
 wget -N http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz && sudo gunzip GeoLiteCity.dat.gz && sudo mkdir /usr/share/GeoIP/ && sudo mv GeoLiteCity.dat /usr/share/GeoIP/
 sudo su - postgres -c "createuser -s flectra"
+sudo su - travis -c "source ~/virtualenv/python3.5/bin/activate"
 sudo su - travis -c "/home/travis/build/flectrahq/flectra/flectra-bin --addons-path=/home/travis/build/flectrahq/flectra/addons -s --stop-after-init -d test"
 echo `pwd`
 ls -alh .
