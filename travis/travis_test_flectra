@@ -1,8 +1,8 @@
 #!/bin/bash
 echo "Creating a database with Base Module ---->"
-sudo su - travis -c "source ~/virtualenv/python3.6.3/bin/activate && /home/travis/build/flectrahq/flectra/flectra-bin --addons-path=/home/travis/build/flectrahq/flectra/addons --stop-after-init -d base -i base --logfile=~/flectra-base.log --test-enable"
+sudo su - travis -c "source ~/virtualenv/python3.6/bin/activate && /home/travis/build/flectrahq/flectra/flectra-bin --addons-path=/home/travis/build/flectrahq/flectra/addons --stop-after-init -d base -i base --logfile=~/flectra-base.log --test-enable"
 cat ~/flectra-base.log
 echo "Creating a database with All Modules ---->"
-sudo su - travis -c "source ~/virtualenv/python3.6.3/bin/activate && /home/travis/build/flectrahq/flectra/flectra-bin --addons-path=/home/travis/build/flectrahq/flectra/addons --stop-after-init -d all -i 'all' --logfile=~/flectra-all.log  --test-enable"
+sudo su - travis -c "source ~/virtualenv/python3.6/bin/activate && /home/travis/build/flectrahq/flectra/flectra-bin --addons-path=/home/travis/build/flectrahq/flectra/addons --stop-after-init -d all -i 'all' --logfile=~/flectra-all.log  --test-enable"
 cat ~/flectra-all.log
 exit 0
