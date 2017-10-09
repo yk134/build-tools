@@ -2,7 +2,7 @@
 echo "Activating Python Environment ---->"
 sudo su - travis -c "source ~/virtualenv/python3.6.3/bin/activate "
 echo "Creating a database with Base Module ---->"
-sudo su - travis -c "/home/travis/build/flectrahq/flectra/flectra-bin --addons-path=/home/travis/build/flectrahq/flectra/addons --stop-after-init -d base -i base --log-file=~/flectra-base.log"
+sudo su - travis -c "/home/travis/build/flectrahq/flectra/flectra-bin --addons-path=/home/travis/build/flectrahq/flectra/addons --stop-after-init -d base -i base --logfile=~/flectra-base.log --test-enable"
 echo "Creating a database with All Modules ---->"
-sudo su - travis -c "/home/travis/build/flectrahq/flectra/flectra-bin --addons-path=/home/travis/build/flectrahq/flectra/addons --stop-after-init -d all -i 'all' --log-file=~/flectra-all.log"
+sudo su - travis -c "/home/travis/build/flectrahq/flectra/flectra-bin --addons-path=/home/travis/build/flectrahq/flectra/addons --stop-after-init -d all -i 'all' --logfile=~/flectra-all.log  --test-enable"
 exit 0
