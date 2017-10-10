@@ -1,10 +1,4 @@
 #!/bin/bash
-echo "PWD ::::=="
-echo `pwd`
-echo "HOME-----"
-echo `$HOME`
-echo "ENV-------",
-env
 sudo npm install -g less less-plugin-clean-css -y && ln -s /usr/bin/nodejs /usr/bin/node
 curl -o wkhtmltox.deb -SL http://nightly.odoo.com/extra/wkhtmltox-0.12.1.2_linux-jessie-amd64.deb
 echo '40e8b906de658a2221b15e4e8cd82565a47d7ee8 wkhtmltox.deb' | sha1sum -c -
