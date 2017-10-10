@@ -1,0 +1,213 @@
+#!/usr/bin/env python
+
+# Part of code taken from github.com/OCA/maintainer-quality-tools
+
+from __future__ import print_function
+
+import re
+import os
+import shutil
+import subprocess
+import sys
+import uuid
+try:
+  basestring
+except NameError:
+  basestring = str
+
+RED = "\033[1;31m"
+GREEN = "\033[1;32m"
+YELLOW = "\033[1;33m"
+YELLOW_LIGHT = "\033[33m"
+CLEAR = "\033[0;m"
+
+# modules that are either added as dependencies for other modules, so better to ignore them for the moment
+modules_to_ignore = ['delivery', 'http_routing', 'stock_picking_batch', 'hw_blackbox_be', 
+                     'auth_oauth', 'mass_mailing_event_track', 'sms', 'stock_account', 
+                     'account_tax_python', 'hr_maintenance', 'base_vat', 'procurement_jit', 
+                     'association', 'sale_order_dates', 'base_import_module', 'hr_contract', 
+                     'base_geolocalize', 'sale_service_rating', 'analytic', 'stock_dropshipping', 
+                     'phone_validation', 'website_form_project', 'auth_ldap', 'product_margin', 
+                     'hr_payroll_account', 'crm_phone_validation', 'account_test', 'report_intrastat', 
+                     'rating_project', 'project_timesheet_holidays', 'anonymization', 'decimal_precision', 
+                     'gamification_sale_crm', 'website_sale_stock_options', 'fetchmail', 'calendar_sms', 'google_account', 
+                     'theme_bootswatch', 'base_gengo', 'purchase_mrp', 'sale_expense', 'crm_livechat', 'sale_mrp', 
+                     'base_setup', 'theme_default', 'mass_mailing_event', 'account_payment', 'pos_cache', 'survey_crm', 
+                     'account_analytic_default', 'sale_margin', 'account_cancel', 'base_iban', 
+                     'base_automation', 'auth_crypt', 'mrp_byproduct', 'note_pad', 'product_extended', 
+                     'base_sparse_field', 'utm', 'hw_scale', 'hw_screen', 'crm_project', 'stock_landed_costs', 
+                     'purchase_requisition', 'sale_crm', 'website_crm_phone_validation', 'hw_posbox_upgrade', 
+                     'account_budget', 'hw_scanner', 'hw_escpos', 'hw_posbox_homepage', 'account_voucher', 'sale_payment', 
+                     'hw_proxy', 'pos_sale', 'hr_timesheet_attendance', 'pad', 'base_vat_autocomplete', 'link_tracker', 
+                     'hr_expense_check', 'base_address_extended', 'pad_project', 'base_address_city', 'website_gengo', 
+                     'resource', 'hr_recruitment_survey']
+
+def colorized(text, color):
+    return '\n'.join(
+        map(lambda line: color + line + CLEAR, text.split('\n')))
+
+
+def green(text):
+    return colorized(text, GREEN)
+
+
+def yellow(text):
+    return colorized(text, YELLOW)
+
+
+def red(text):
+    return colorized(text, RED)
+
+
+def yellow_light(text):
+    return colorized(text, YELLOW_LIGHT)
+
+
+fail_msg = red("FAIL")
+success_msg = green("Success")
+
+
+def has_test_errors(fname, dbname, check_loaded=True):
+    """
+    Check a list of log lines for test errors.
+    Extension point to detect false positives.
+    """
+    # Rules defining checks to perform
+    # this can be
+    # - a string which will be checked in a simple substring match
+    # - a regex object that will be matched against the whole message
+    # - a callable that receives a dictionary of the form
+    #     {
+    #         'loglevel': ...,
+    #         'message': ....,
+    #     }
+    errors_ignore = [
+        'Mail delivery failed',
+        'failed sending mail',
+        ]
+    errors_report = [
+        lambda x: x['loglevel'] == 'CRITICAL',
+        'At least one test failed',
+        'no access rules, consider adding one',
+        'invalid module names, ignored',
+        ]
+
+    def make_pattern_list_callable(pattern_list):
+        for i in range(len(pattern_list)):
+            if isinstance(pattern_list[i], basestring):
+                regex = re.compile(pattern_list[i])
+                pattern_list[i] = lambda x, regex=regex:\
+                    regex.search(x['message'])
+            elif hasattr(pattern_list[i], 'match'):
+                regex = pattern_list[i]
+                pattern_list[i] = lambda x, regex=regex:\
+                    regex.search(x['message'])
+
+    make_pattern_list_callable(errors_ignore)
+    make_pattern_list_callable(errors_report)
+
+    print("-"*10)
+    # Read log file removing ASCII color escapes:
+    # http://serverfault.com/questions/71285
+    color_regex = re.compile(r'\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]')
+    log_start_regex = re.compile(
+        r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3} \d+ (?P<loglevel>\w+) '
+        '(?P<db>(%s)|([?])) (?P<logger>\S+): (?P<message>.*)$' % dbname)
+    log_records = []
+    last_log_record = dict.fromkeys(log_start_regex.groupindex.keys())
+    with open(fname) as log:
+        for line in log:
+            line = color_regex.sub('', line)
+            match = log_start_regex.match(line)
+            if match:
+                last_log_record = match.groupdict()
+                log_records.append(last_log_record)
+            else:
+                last_log_record['message'] = '%s\n%s' % (
+                    last_log_record['message'], line.rstrip('\n')
+                )
+    errors = []
+    for log_record in log_records:
+        ignore = False
+        for ignore_pattern in errors_ignore:
+            if ignore_pattern(log_record):
+                ignore = True
+                break
+        if ignore:
+            break
+        for report_pattern in errors_report:
+            if report_pattern(log_record):
+                errors.append(log_record)
+                break
+
+    if check_loaded:
+        if not [r for r in log_records if 'Modules loaded.' == r['message']]:
+            errors.append({'message': "Modules loaded message not found."})
+
+    if errors:
+        for e in errors:
+            print(e['message'])
+        print("-"*10)
+#     print ("THIS IS ERROR ------",errors)
+    return len(errors)
+
+
+def run_flectra(type_of_db,server_path):
+    print ("\n creating database for : ",type_of_db)
+    try:
+        db = str(uuid.uuid1())+"-"+type_of_db
+        subprocess.check_call(["createdb", db])
+    except subprocess.CalledProcessError:
+        print("Problem in creating database.")
+    else:
+        log_file = os.path.join(server_path,db+".log")
+        
+        #ugly hack as -i all is broken and does not take all modules into consideration
+        # need to remove l10n_* modules from the list as installing them all together
+        # creates trouble and build always fails
+        addons_path = os.path.join(server_path,"addons")
+        addons = list(set([addon.name for addon in os.scandir(addons_path) if addon.is_dir() and "10n" not in addon.name])-set(modules_to_ignore))
+        
+        if type_of_db=="all":
+            modules_to_init = str(",".join(addons))
+        else:
+            modules_to_init = "base"
+
+        cmd_odoo = ["unbuffer"]
+        cmd_odoo += ["%s/flectra-bin" % (server_path),
+                     "-d", 
+                     db,
+                     '--db-filter',
+                     db,
+                     "--addons-path",
+                     addons_path,
+                     "--log-level=info",
+                     "--stop-after-init",
+                     "--test-enable",
+                     "--init",modules_to_init]
+#         print(" ".join(cmd_odoo))
+#         print ("CMD_ Odoooo",cmd_odoo)
+        
+        with subprocess.Popen(cmd_odoo, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True) as p:
+            with open(log_file, 'w') as outfile:
+                for line in p.stdout:
+                    print(line, end='')
+                    outfile.write(line) # process line here
+        returncode = p.wait()
+        outfile.close()
+        errors = has_test_errors(os.path.join(server_path,log_file), db)        
+    return {'errors':errors,'returncode':returncode}
+
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+    res = {}
+    res['base'] = run_flectra(type_of_db="base", server_path="~/flectra")
+    res['all'] = run_flectra(type_of_db="all", server_path="~/flectra")
+    total_errors = ('base' in res and res['base'] and 'errors' in res['base'] and res['base']['errors'] or 0) + \
+         ('all' in res and res['all'] and 'errors' in res['all'] and res['all']['errors'] or 0)
+    return total_errors
+
+if __name__ == '__main__':
+    exit(main())
