@@ -2,8 +2,6 @@
 
 # Part of code taken from github.com/OCA/maintainer-quality-tools
 
-from __future__ import print_function
-
 import re
 import os
 import shutil
