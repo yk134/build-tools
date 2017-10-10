@@ -204,8 +204,11 @@ def main(argv=None):
     server_path = os.getcwd()
     res['base'] = run_flectra(type_of_db="base", server_path=server_path)
     res['all'] = run_flectra(type_of_db="all", server_path=server_path)
-    total_errors = ('base' in res and res['base'] and 'errors' in res['base'] and res['base']['errors'] or 0) + \
-         ('all' in res and res['all'] and 'errors' in res['all'] and res['all']['errors'] or 0)
+    errors_in_base = 'base' in res and res['base'] and 'errors' in res['base'] and res['base']['errors'] 
+    errors_in_all = 'all' in res and res['all'] and 'errors' in res['all'] and res['all']['errors']
+    total_errors = ( errors_in_base or 0) + ( errors_in_all or 0)
+    print ("ERRORS IN BASE : ",errors_in_base)
+    print ("ERRORS IN ALL : ",errors_in_all)
     return total_errors
 
 if __name__ == '__main__':
