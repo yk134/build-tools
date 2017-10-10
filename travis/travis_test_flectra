@@ -201,8 +201,9 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv
     res = {}
-    res['base'] = run_flectra(type_of_db="base", server_path="~/flectra")
-    res['all'] = run_flectra(type_of_db="all", server_path="~/flectra")
+    server_path = os.getcwd()
+    res['base'] = run_flectra(type_of_db="base", server_path=server_path)
+    res['all'] = run_flectra(type_of_db="all", server_path=server_path)
     total_errors = ('base' in res and res['base'] and 'errors' in res['base'] and res['base']['errors'] or 0) + \
          ('all' in res and res['all'] and 'errors' in res['all'] and res['all']['errors'] or 0)
     return total_errors
